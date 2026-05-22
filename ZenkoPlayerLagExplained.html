@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenkoTB — Hold & RLS Fine-Tuning Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg: #07070a;
+            --bg-2: #0e0e14;
+            --bg-3: #13131f;
+            --border: #1e1e2e;
+            --border-hover: #2a2a3f;
+            --text: #e2e2f0;
+            --text-2: #8c8ca8;
+            --text-3: #5a5a78;
+            --accent: #00d9a3;
+            --accent-dim: #00d9a318;
+            --accent-glow: #00d9a340;
+            --danger: #ff4d6d;
+            --danger-dim: #ff4d6d18;
+            --warn: #ffc857;
+            --warn-dim: #ffc85718;
+            --info: #3a86ff;
+            --info-dim: #3a86ff18;
+            --telegram: #0088cc;
+            --mono: 'JetBrains Mono', monospace;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.65;
+            overflow-x: hidden;
+        }
+        .grid {
+            position: fixed; inset: 0;
+            background-image: linear-gradient(rgba(0,217,163,0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0,217,163,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none; z-index: 0;
+        }
+        .glow {
+            position: fixed; width: 700px; height: 700px;
+            border-radius: 50%; pointer-events: none; z-index: 0;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            top: -250px; left: -200px; animation: drift 18s ease-in-out infinite;
+        }
+        .glow-2 {
+            position: fixed; width: 600px; height: 600px;
+            border-radius: 50%; pointer-events: none; z-index: 0;
+            background: radial-gradient(circle, rgba(58,134,255,0.12) 0%, transparent 70%);
+            bottom: -200px; right: -200px; animation: drift 22s ease-in-out infinite reverse;
+        }
+        @keyframes drift { 50% { transform: translate(40px, 40px); } }
+        .wrap { max-width: 880px; margin: 0 auto; padding: 0 22px; position: relative; z-index: 1; }
+
+        header { text-align: center; padding: 55px 0 35px; border-bottom: 1px solid var(--border); margin-bottom: 35px; }
+        .badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--accent-dim); border: 1px solid var(--accent);
+            color: var(--accent); padding: 7px 18px; border-radius: 100px;
+            font-size: 0.78rem; font-weight: 700; letter-spacing: 0.6px; margin-bottom: 20px;
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 var(--accent-glow);} 50%{box-shadow:0 0 25px 6px var(--accent-glow);} }
+        h1 { font-size: 2.6rem; font-weight: 800; letter-spacing: -1.2px;
+             background: linear-gradient(135deg, #fff, var(--accent));
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .sub { color: var(--text-2); font-size: 1.05rem; max-width: 560px; margin: 0 auto 25px; }
+        .tg-bar { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .btn-tg {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: var(--telegram); color: #fff; text-decoration: none;
+            padding: 11px 22px; border-radius: 10px; font-weight: 600; font-size: 0.9rem;
+            transition: all 0.3s; border: none; cursor: pointer;
+            box-shadow: 0 4px 18px rgba(0,136,204,0.28);
+        }
+        .btn-tg:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,136,204,0.38); }
+        .btn-tg.ghost { background: transparent; border: 2px solid var(--telegram); color: var(--telegram); box-shadow: none; }
+        .btn-tg.ghost:hover { background: var(--telegram); color: #fff; }
+
+        .card {
+            background: var(--bg-3); border: 1px solid var(--border); border-radius: 14px;
+            padding: 28px; margin-bottom: 20px; transition: all 0.35s ease; position: relative; overflow: hidden;
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--accent), var(--info)); opacity: 0; transition: opacity 0.3s;
+        }
+        .card:hover::before { opacity: 1; }
+        .card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.45); }
+        .c-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+        .c-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+        .ic-g { background: var(--accent-dim); color: var(--accent); }
+        .ic-r { background: var(--danger-dim); color: var(--danger); }
+        .ic-y { background: var(--warn-dim); color: var(--warn); }
+        .ic-b { background: var(--info-dim); color: var(--info); }
+        h2 { font-size: 1.25rem; font-weight: 700; }
+        h3 { font-size: 1.05rem; font-weight: 600; margin: 22px 0 10px; display: flex; align-items: center; gap: 8px; color: var(--text); }
+        p { color: var(--text-2); font-size: 0.92rem; margin-bottom: 14px; }
+        code { font-family: var(--mono); font-size: 0.85em; background: rgba(255,255,255,0.06); padding: 2px 7px; border-radius: 5px; color: var(--accent); }
+        strong { color: var(--text); font-weight: 600; }
+
+        .flow { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 22px; margin: 16px 0; }
+        .f-step { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 6px;
+                   background: rgba(255,255,255,0.03); border-radius: 9px; border-left: 3px solid var(--accent);
+                   transition: all 0.3s; }
+        .f-step:hover { background: rgba(255,255,255,0.06); transform: translateX(4px); }
+        .f-step.drop { border-left-color: var(--danger); }
+        .f-step.hold { border-left-color: var(--warn); }
+        .f-step.send { border-left-color: var(--accent); }
+        .f-step.auto { border-left-color: var(--info); }
+        .f-num { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-dim); color: var(--accent);
+                  display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+        .f-num.r { background: var(--danger-dim); color: var(--danger); }
+        .f-num.y { background: var(--warn-dim); color: var(--warn); }
+        .f-num.b { background: var(--info-dim); color: var(--info); }
+        .f-arrow { text-align: center; color: var(--text-3); font-size: 1.1rem; margin: 3px 0; }
+
+        .code-block { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 18px;
+                      font-family: var(--mono); font-size: 0.82rem; line-height: 1.6; overflow-x: auto; position: relative; margin: 14px 0; }
+        .cb-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .cb-title { color: var(--text-3); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Inter', sans-serif; font-weight: 600; }
+        .copy { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-2);
+                padding: 3px 10px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .copy:hover { background: var(--border-hover); color: var(--text); }
+        .c-k { color: #c678dd; } .c-f { color: #61afef; } .c-s { color: #98c379; } .c-c { color: #5c6370; font-style: italic; } .c-n { color: #d19a66; }
+
+        .params { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 16px 0; }
+        .param { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: all 0.3s; }
+        .param:hover { border-color: var(--border-hover); }
+        .param-name { font-family: var(--mono); font-size: 0.82rem; color: var(--accent); font-weight: 600; margin-bottom: 6px; }
+        .param-desc { font-size: 0.82rem; color: var(--text-2); line-height: 1.5; }
+        .param-tag { display: inline-block; margin-top: 8px; font-size: 0.7rem; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
+        .tag-hold { background: var(--warn-dim); color: var(--warn); }
+        .tag-drop { background: var(--danger-dim); color: var(--danger); }
+        .tag-safe { background: var(--accent-dim); color: var(--accent); }
+        .tag-info { background: var(--info-dim); color: var(--info); }
+
+        .rls-builder { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin: 16px 0; }
+        .rls-row { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+        .rls-row select, .rls-row input {
+            background: var(--bg-3); border: 1px solid var(--border); color: var(--text);
+            padding: 8px 12px; border-radius: 8px; font-family: var(--mono); font-size: 0.85rem;
+        }
+        .rls-row input { width: 70px; }
+        .rls-row button {
+            background: var(--danger-dim); border: 1px solid var(--danger); color: var(--danger);
+            padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600;
+        }
+        .rls-add { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; margin-top: 8px; }
+        .rls-preview { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 14px; padding: 14px; background: var(--bg); border-radius: 8px; min-height: 40px; }
+        .dot { width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; }
+        .dot-d { background: var(--danger-dim); color: var(--danger); border: 1px solid var(--danger); }
+        .dot-a { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); }
+        .dot-r { background: var(--info-dim); color: var(--info); border: 1px solid var(--info); }
+
+        .slider-box { margin: 14px 0; }
+        .slider-top { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.88rem; font-weight: 500; }
+        input[type=range] { width: 100%; height: 5px; border-radius: 3px; background: var(--bg); outline: none; -webkit-appearance: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; box-shadow: 0 0 10px var(--accent-glow); }
+        .demo-out { margin-top: 14px; padding: 14px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); font-family: var(--mono); font-size: 0.82rem; color: var(--accent); }
+
+        .warn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 16px 0; }
+        .warn-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 18px; transition: all 0.3s; }
+        .warn-card:hover { border-color: var(--danger); background: var(--danger-dim); }
+        .warn-card h4 { color: var(--danger); font-size: 0.9rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+        .warn-card p { font-size: 0.82rem; margin: 0; }
+
+        .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+        .compare-box { padding: 16px; border-radius: 10px; border: 1px solid var(--border); }
+        .compare-good { background: var(--accent-dim); border-color: var(--accent); }
+        .compare-bad { background: var(--danger-dim); border-color: var(--danger); }
+        .compare h4 { font-size: 0.9rem; margin-bottom: 8px; }
+        .compare-good h4 { color: var(--accent); } .compare-bad h4 { color: var(--danger); }
+        .compare ul { font-size: 0.82rem; color: var(--text-2); margin-left: 16px; }
+
+        footer { text-align: center; padding: 35px 0 55px; border-top: 1px solid var(--border); margin-top: 35px; color: var(--text-3); font-size: 0.85rem; }
+        .ft-tg { display: inline-flex; align-items: center; gap: 8px; color: var(--telegram); text-decoration: none; font-weight: 600; margin-top: 10px; transition: all 0.3s; }
+        .ft-tg:hover { gap: 12px; }
+
+        .fade { opacity: 0; transform: translateY(18px); transition: all 0.55s ease; }
+        .fade.show { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.9rem; }
+            .compare { grid-template-columns: 1fr; }
+            .card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid"></div><div class="glow"></div><div class="glow-2"></div>
+    <div class="wrap">
+        <header>
+            <div class="badge"><i class="fas fa-shield-halved"></i> ZenkoTB Research</div>
+            <h1>Hold & RLS Fine-Tuning</h1>
+            <p class="sub">Built specifically for the Zenko NFQUEUE engine. How the flush-hold-release cycle works and how to tune every knob without breaking your connection.</p>
+            <div class="tg-bar">
+                <a href="https://t.me/+QgJF37rlWgg5MzE9" class="btn-tg" target="_blank"><i class="fab fa-telegram"></i> @ZenkoTB Updates</a>
+                <a href="https://t.me/+QgJF37rlWgg5MzE9" class="btn-tg ghost" target="_blank"><i class="fab fa-telegram"></i> Join Chat Group</a>
+            </div>
+        </header>
+
+        <!-- THE REAL FLOW -->
+        <div class="card fade">
+            <div class="c-head"><div class="c-icon ic-b"><i class="fas fa-diagram-project"></i></div><h2>The Real 3-Phase Flow</h2></div>
+            <p>Your code does <strong>not</strong> simply "block everything." It runs a precise 3-phase cycle. Understanding this order is everything.</p>
+            <div class="flow">
+                <div class="f-step auto"><div class="f-num b">1</div><div><strong style="color:var(--text)">Auto-Detection</strong><br><span style="color:var(--text-3);font-size:0.82rem">ServerDetect script finds game server IP:PORT → iptables rule injected → traffic routed to NFQUEUE</span></div></div>
+                <div class="f-arrow"><i class="fas fa-arrow-down"></i></div>
+                <div class="f-step drop"><div class="f-num r">2</div><div><strong style="color:var(--danger)">FLUSH DROP</strong><br><span style="color:var(--text-3);font-size:0.82rem">First <code>flush_drop_count</code> packets are <strong>immediately dropped</strong> (not held). This creates initial desync.</span></div></div>
+                <div class="f-arrow"><i class="fas fa-arrow-down"></i></div>
+                <div class="f-step hold"><div class="f-num y">3</div><div><strong style="color:var(--warn)">HOLD QUEUE</strong><br><span style="color:var(--text-3);font-size:0.82rem">Every subsequent packet to <code>current_port</code> is intercepted and stored in a linked list. <strong>No verdict is sent yet.</strong></span></div></div>
+                <div class="f-arrow"><i class="fas fa-arrow-down"></i></div>
+                <div class="f-step send"><div class="f-num">4</div><div><strong style="color:var(--accent)">RLS RELEASE</strong><br><span style="color:var(--text-3);font-size:0.82rem">On Unblock, held packets are processed front-to-back through your <code>rls_pattern</code>. Accept = send. Drop = discard.</span></div></div>
+            </div>
+            <p style="margin-top:14px"><i class="fas fa-triangle-exclamation" style="color:var(--warn)"></i> <strong>Critical:</strong> The RLS <code>"drop"</code> action drops <em>already-held</em> packets during release. It does not drop new live traffic. Once unblock finishes, normal traffic resumes instantly.</p>
+        </div>
+
+        <!-- RLS PATTERN -->
+        <div class="card fade">
+            <div class="c-head"><div class="c-icon ic-y"><i class="fas fa-layer-group"></i></div><h2>RLS Pattern Mechanics</h2></div>
+            <p>The pattern is an <strong>array of instructions</strong> read sequentially from <code>config.json</code>. When unblock fires, the engine walks your held-packet queue and applies each rule.</p>
+
+            <h3><i class="fas fa-list-ol" style="color:var(--warn)"></i> How It Reads (Step by Step)</h3>
+            <ol style="color:var(--text-2); margin-left:20px; font-size:0.92rem; margin-bottom:14px;">
+                <li>Unblock triggered → all held packets become an ordered array.</li>
+                <li>Read Pattern[0]: if <code>action:"drop" count:15</code> → first 15 held packets are <strong>discarded</strong>.</li>
+                <li>Read Pattern[1]: if <code>action:"accept" count:17</code> → next 17 held packets are <strong>sent to server</strong>.</li>
+                <li>Continue until array ends or packets run out.</li>
+                <li>If packets remain after last pattern → <code>rls_pattern_remainder</code> decides their fate (keep this as <code>"accept"</code>).</li>
+            </ol>
+
+            <div class="code-block">
+                <div class="cb-head"><span class="cb-title">config.json — RLS Section</span><button class="copy" onclick="copy(this)">Copy</button></div>
+                <div>
+<span class="c-c">// Maximum 16 entries. Remainder should ALWAYS be "accept"</span>
+<span class="c-k">"rls_pattern"</span>: [
+  { <span class="c-k">"action"</span>: <span class="c-s">"drop"</span>,   <span class="c-k">"count"</span>: <span class="c-n">15</span> },
+  { <span class="c-k">"action"</span>: <span class="c-s">"accept"</span>, <span class="c-k">"count"</span>: <span class="c-n">17</span> },
+  { <span class="c-k">"action"</span>: <span class="c-s">"drop"</span>,   <span class="c-k">"count"</span>: <span class="c-n">8</span>  },
+  { <span class="c-k">"action"</span>: <span class="c-s">"accept"</span>, <span class="c-k">"count"</span>: <span class="c-n">12</span> }
+],
+<span class="c-k">"rls_pattern_remainder"</span>: <span class="c-s">"accept"</span>
+                </div>
+            </div>
+
+            <h3><i class="fas fa-flask" style="color:var(--accent)"></i> Interactive Pattern Builder</h3>
+            <div class="rls-builder">
+                <div id="rlsRows">
+                    <div class="rls-row"><select onchange="drawRls()"><option value="0">drop</option><option value="1" selected>accept</option></select><input type="number" value="15" min="1" oninput="drawRls()"><button onclick="delRow(this)">×</button></div>
+                    <div class="rls-row"><select onchange="drawRls()"><option value="0">drop</option><option value="1" selected>accept</option></select><input type="number" value="17" min="1" oninput="drawRls()"><button onclick="delRow(this)">×</button></div>
+                </div>
+                <button class="rls-add" onclick="addRow()"><i class="fas fa-plus"></i> Add Step</button>
+                <div style="margin-top:10px; font-size:0.82rem; color:var(--text-3);">Remainder fallback: <span style="color:var(--accent); font-weight:600;">accept</span> (recommended)</div>
+                <div class="rls-preview" id="rlsPreview"></div>
+            </div>
+        </div>
+
+        <!-- CONFIG PARAMETERS -->
+        <div class="card fade">
+            <div class="c-head"><div class="c-icon ic-g"><i class="fas fa-sliders"></i></div><h2>Config Parameters Explained</h2></div>
+            <p>Every value in <code>/storage/emulated/0/Zenko_Prefs/config.json</code> controls a specific part of the cycle. Here is exactly what each one does.</p>
+            <div class="params">
+                <div class="param">
+                    <div class="param-name">flush_drop_count</div>
+                    <div class="param-desc">How many packets are <strong>immediately dropped</strong> when Block turns ON, before holding begins. Creates the initial "cut" in sync.</div>
+                    <span class="param-tag tag-drop">Affects Phase 2</span>
+                </div>
+                <div class="param">
+                    <div class="param-name">rls_pattern[]</div>
+                    <div class="param-desc">The release schedule. Each entry is <code>{action, count}</code>. Max 16 entries. Controls which held packets survive unblock.</div>
+                    <span class="param-tag tag-hold">Affects Phase 4</span>
+                </div>
+                <div class="param">
+                    <div class="param-name">rls_pattern_remainder</div>
+                    <div class="param-desc">Fallback action for leftover held packets after the last pattern entry. <strong>Always keep as "accept"</strong> or packets get permanently stuck.</div>
+                    <span class="param-tag tag-safe">Keep = accept</span>
+                </div>
+                <div class="param">
+                    <div class="param-name">window</div>
+                    <div class="param-desc">Sliding window size for packet-size classification. Looks at last N packet payloads to guess if you are moving.</div>
+                    <span class="param-tag tag-info">Detection</span>
+                </div>
+                <div class="param">
+                    <div class="param-name">large_threshold</div>
+                    <div class="param-desc">Payload byte size considered "large." Packets above this count as movement candidates inside the sliding window.</div>
+                    <span class="param-tag tag-info">Detection</span>
+                </div>
+                <div class="param">
+                    <div class="param-name">big_required</div>
+                    <div class="param-desc">How many "large" packets must appear inside the <code>window</code> to increment the internal move_score.</div>
+                    <span class="param-tag tag-info">Detection</span>
+                </div>
+                <div class="param">
+                    <div class="param-name">move_required</div>
+                    <div class="param-desc">The move_score threshold that sets <code>state_moving = 1</code>. Higher = needs more evidence to believe you are moving.</div>
+                    <span class="param-tag tag-info">Detection</span>
+                </div>
+                <div class="param">
+                    <div class="param-name">queue_num</div>
+                    <div class="param-desc">The NFQUEUE number iptables binds to. Must match your <code>iptables -j NFQUEUE --queue-num N</code> rule.</div>
+                    <span class="param-tag tag-info">System</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- FINE TUNING -->
+        <div class="card fade">
+            <div class="c-head"><div class="c-icon ic-g"><i class="fas fa-wand-magic-sparkles"></i></div><h2>Fine Tuning for Newbies</h2></div>
+            <p>Tuning is the art of making the server believe your delayed packets are just <em>bad mobile internet</em>, not a cheat. Here is how to adjust each parameter safely.</p>
+
+            <h3><i class="fas fa-bolt" style="color:var(--danger)"></i> 1. Tuning <code>flush_drop_count</code></h3>
+            <p>This is your <strong>opening cut</strong>. It drops live packets instantly when Block turns on. If too high, the server loses too much sync immediately and backtracks you. If too low, the effect is weak.</p>
+            <div class="slider-box">
+                <div class="slider-top"><span>flush_drop_count</span><span id="flushVal" style="color:var(--danger); font-weight:700">10</span></div>
+                <input type="range" id="flushSlider" min="0" max="30" value="10" oninput="updateFlush()">
+                <div class="demo-out" id="flushOut">Effect: Moderate initial desync. Safe for most tickrates.</div>
+            </div>
+            <ul style="color:var(--text-2); margin-left:20px; font-size:0.88rem; margin-bottom:16px;">
+                <li><strong>0-5:</strong> Subtle. Server barely notices. Good for testing.</li>
+                <li><strong>8-15:</strong> Sweet spot. Creates a clean break without instant rubberband.</li>
+                <li><strong>20+:</strong> Aggressive. High risk of timeout or heavy correction.</li>
+            </ul>
+
+            <h3><i class="fas fa-layer-group" style="color:var(--warn)"></i> 2. Tuning <code>rls_pattern</code></h3>
+            <p>This is the <strong>main event</strong>. It decides the fate of every held packet during unblock. The pattern runs front-to-back on your queue.</p>
+            <div style="background:var(--bg-2); border:1px solid var(--border); border-radius:10px; padding:16px; margin:12px 0;">
+                <div style="display:flex; gap:12px; flex-wrap:wrap; font-size:0.85rem; color:var(--text-2);">
+                    <div style="flex:1; min-width:200px;">
+                        <strong style="color:var(--text)">Safe Starter:</strong><br>
+                        <code style="font-size:0.8rem">drop 8 → accept 12</code><br>
+                        <span style="font-size:0.78rem">Gentle. Good for high-tickrate games.</span>
+                    </div>
+                    <div style="flex:1; min-width:200px;">
+                        <strong style="color:var(--text)">Balanced:</strong><br>
+                        <code style="font-size:0.8rem">drop 12 → accept 15 → drop 6 → accept 10</code><br>
+                        <span style="font-size:0.78rem">Varied. Mimics real network jitter.</span>
+                    </div>
+                    <div style="flex:1; min-width:200px;">
+                        <strong style="color:var(--danger)">Aggressive:</strong><br>
+                        <code style="font-size:0.8rem">drop 20 → accept 10</code><br>
+                        <span style="font-size:0.78rem">Heavy desync. Risky on strict anti-cheat.</span>
+                    </div>
+                </div>
+            </div>
+            <p><strong>Golden rule:</strong> Your total held packet count must be roughly <code>flush_drop + (sum of all pattern counts)</code>. If you hold 50 packets but your pattern only covers 30, the remainder handles the rest. That is why remainder = <code>"accept"</code> is critical — it acts as a safety net.</p>
+
+            <h3><i class="fas fa-wave-square" style="color:var(--info)"></i> 3. The "Human Lag" Rule</h3>
+            <p>Real mobile lag is <strong>irregular</strong>. Never use the same drop/accept numbers forever. Alternate them so the server sees a believable jitter graph.</p>
+            <div class="code-block">
+                <div class="cb-head"><span class="cb-title">Good vs Bad Pattern Design</span><button class="copy" onclick="copy(this)">Copy</button></div>
+                <div>
+<span class="c-c">// BAD — robotic, easy to fingerprint</span>
+<span class="c-k">"rls_pattern"</span>: [
+  { <span class="c-s">"drop"</span>: <span class="c-n">15</span> }, { <span class="c-s">"accept"</span>: <span class="c-n">15</span> },
+  { <span class="c-s">"drop"</span>: <span class="c-n">15</span> }, { <span class="c-s">"accept"</span>: <span class="c-n">15</span> }
+]
+
+<span class="c-c">// GOOD — mimics real network breathing</span>
+<span class="c-k">"rls_pattern"</span>: [
+  { <span class="c-s">"drop"</span>: <span class="c-n">8</span> },  { <span class="c-s">"accept"</span>: <span class="c-n">12</span> },
+  { <span class="c-s">"drop"</span>: <span class="c-n">14</span> }, { <span class="c-s">"accept"</span>: <span class="c-n">10</span> },
+  { <span class="c-s">"drop"</span>: <span class="c-n">6</span> },  { <span class="c-s">"accept"</span>: <span class="c-n">16</span> },
+  { <span class="c-s">"drop"</span>: <span class="c-n">10</span> }, { <span class="c-s">"accept"</span>: <span class="c-n">11</span> }
+]
+                </div>
+            </div>
+
+            <h3><i class="fas fa-stopwatch" style="color:var(--accent)"></i> 4. How Long Should You Hold?</h3>
+            <p>There is no "hold duration" timer in your code. Hold time depends entirely on <strong>how long you keep Block ON</strong>. If the game sends 60 packets/sec and you block for 2 seconds, you hold ~120 packets. Your RLS pattern must be sized accordingly.</p>
+            <ul style="color:var(--text-2); margin-left:20px; font-size:0.88rem; margin-bottom:14px;">
+                <li><strong>Short block (0.5s):</strong> ~30 packets held. Use small pattern counts (5-10).</li>
+                <li><strong>Medium block (1-2s):</strong> ~60-120 packets. Use medium counts (10-20).</li>
+                <li><strong>Long block (3s+):</strong> 180+ packets. You need longer patterns or the remainder will do all the work.</li>
+            </ul>
+        </div>
+
+        <!-- WHY IT WORKS -->
+        <div class="card fade">
+            <div class="c-head"><div class="c-icon ic-b"><i class="fas fa-brain"></i></div><h2>Why This Avoids Backtrack</h2></div>
+            <p>Normal packet blocking tells the server: <em>"Player was at A, then nothing, then suddenly Z."</em> The server says <strong>impossible</strong> and snaps you back to A.</p>
+            <p>Your hold+RLS system tells the server: <em>"Player was at A, then B, C, D, E arrived late because of lag."</em> The server sees a <strong>complete history</strong>, just delayed. It blames your internet, not your movement.</p>
+            <div class="compare">
+                <div class="compare-box compare-bad">
+                    <h4><i class="fas fa-xmark"></i> Simple Block (Backtrack)</h4>
+                    <ul>
+                        <li>Packet 1-20: Dropped forever</li>
+                        <li>Packet 21: Arrives with huge position jump</li>
+                        <li>Server detects teleport</li>
+                        <li>Instant snapback to old position</li>
+                    </ul>
+                </div>
+                <div class="compare-box compare-good">
+                    <h4><i class="fas fa-check"></i> Hold + RLS (No Backtrack)</h4>
+                    <ul>
+                        <li>Packet 1-20: Held in memory</li>
+                        <li>Unblock → replayed in order via pattern</li>
+                        <li>Server receives A→B→C→D→E</li>
+                        <li>Interprets as network lag spike</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEWBIE MISTAKES -->
+        <div class="card fade">
+            <div class="c-head"><div class="c-icon ic-r"><i class="fas fa-triangle-exclamation"></i></div><h2>Newbie Mistakes That Break It</h2></div>
+            <div class="warn-grid">
+                <div class="warn-card">
+                    <h4><i class="fas fa-ban"></i> Remainder = "drop"</h4>
+                    <p>If your pattern runs out and remainder is drop, all leftover held packets are discarded. The server sees a massive sync hole → instant backtrack or timeout.</p>
+                </div>
+                <div class="warn-card">
+                    <h4><i class="fas fa-layer-group"></i> Pattern Too Short</h4>
+                    <p>If you hold 100 packets but your pattern only covers 30, the remainder handles 70. If remainder is accept, you dump 70 packets at once → burst detection.</p>
+                </div>
+                <div class="warn-card">
+                    <h4><i class="fas fa-bolt"></i> flush_drop Too High</h4>
+                    <p>Dropping 30+ packets before holding begins creates an instant desync chasm. The server may reconcile before you even release anything.</p>
+                </div>
+                <div class="warn-card">
+                    <h4><i class="fas fa-clock"></i> Holding Too Long</h4>
+                    <p>Blocking for 5+ seconds queues 300+ packets. Releasing them all through a tiny pattern takes forever. Server may disconnect due to stale state.</p>
+                </div>
+                <div class="warn-card">
+                    <h4><i class="fas fa-list"></i> Static Patterns</h4>
+                    <p>Using the exact same drop/accept count repeatedly looks like a robot. Anti-cheat heuristics can fingerprint perfect repetition.</p>
+                </div>
+                <div class="warn-card">
+                    <h4><i class="fas fa-shuffle"></i> Forgetting Order</h4>
+                    <p>Your code preserves order automatically, but if you ever modify it to reorder packets, the sequence ID jump will flag instantly. Never shuffle.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- WORKFLOW -->
+        <div class="card fade">
+            <div class="c-head"><div class="c-icon ic-g"><i class="fas fa-road"></i></div><h2>Recommended Tuning Workflow</h2></div>
+            <div class="flow">
+                <div class="f-step send"><div class="f-num">1</div><div><strong style="color:var(--text)">Start Conservative</strong><br><span style="color:var(--text-3);font-size:0.82rem">flush_drop_count: 5 | pattern: drop 5 → accept 10</span></div></div>
+                <div class="f-arrow"><i class="fas fa-arrow-down"></i></div>
+                <div class="f-step send"><div class="f-num">2</div><div><strong style="color:var(--text)">Test Movement</strong><br><span style="color:var(--text-3);font-size:0.82rem">Walk, sprint, jump. Watch for snapback or freezing.</span></div></div>
+                <div class="f-arrow"><i class="fas fa-arrow-down"></i></div>
+                <div class="f-step send"><div class="f-num">3</div><div><strong style="color:var(--text)">Increase Gradually</strong><br><span style="color:var(--text-3);font-size:0.82rem">Bump flush_drop to 8. Add pattern steps. Never double everything at once.</span></div></div>
+                <div class="f-arrow"><i class="fas fa-arrow-down"></i></div>
+                <div class="f-step drop"><div class="f-num r">4</div><div><strong style="color:var(--danger)">Watch Bad Signs</strong><br><span style="color:var(--text-3);font-size:0.82rem">Freeze, snapback, screen shake, timeout → reduce drop counts immediately.</span></div></div>
+                <div class="f-arrow"><i class="fas fa-arrow-down"></i></div>
+                <div class="f-step send"><div class="f-num">5</div><div><strong style="color:var(--text)">Add Variation</strong><br><span style="color:var(--text-3);font-size:0.82rem">Mix counts: 8/12, 12/15, 6/10. Real lag is never uniform.</span></div></div>
+            </div>
+
+            <h3><i class="fas fa-heart-pulse" style="color:var(--accent)"></i> Good Signs vs Bad Signs</h3>
+            <div class="compare">
+                <div class="compare-box compare-good">
+                    <h4><i class="fas fa-check"></i> Good Signs</h4>
+                    <ul>
+                        <li>Movement feels delayed but smooth</li>
+                        <li>No instant teleport back</li>
+                        <li>Server accepts new position</li>
+                        <li>Connection stays alive</li>
+                        <li>Damage/hits register normally</li>
+                    </ul>
+                </div>
+                <div class="compare-box compare-bad">
+                    <h4><i class="fas fa-xmark"></i> Bad Signs</h4>
+                    <ul>
+                        <li>Character freezes in place</li>
+                        <li>Instant snapback to old spot</li>
+                        <li>Screen shakes violently</li>
+                        <li>Connection timeout / disconnect</li>
+                        <li>Other players see you teleport</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- MENTAL MODEL -->
+        <div class="card fade">
+            <div class="c-head"><div class="c-icon ic-y"><i class="fas fa-envelope"></i></div><h2>The Mailbox Analogy</h2></div>
+            <p style="text-align:center; padding:18px; background:var(--bg-2); border-radius:10px; border:1px solid var(--border); font-size:1rem;">
+                Instead of <strong style="color:var(--danger)">burning letters</strong>,<br>
+                you <strong style="color:var(--warn)">collect them in a box</strong>,<br>
+                then <strong style="color:var(--accent)">mail them in batches later</strong>.<br><br>
+                The server thinks: <em style="color:var(--text-2)">"Slow post office"</em><br>
+                Not: <em style="color:var(--danger)">"This person teleported"</em>
+            </p>
+            <p style="margin-top:14px; text-align:center; color:var(--text-2); font-size:0.9rem;">
+                <strong style="color:var(--text)">flush_drop</strong> = the first letters you throw away to start the trick.<br>
+                <strong style="color:var(--text)">rls_pattern</strong> = the schedule for mailing the rest.<br>
+                <strong style="color:var(--text)">remainder = accept</strong> = if you have extra letters, mail them anyway.<br>
+                Never leave mail in the box forever.
+            </p>
+        </div>
+
+        <footer>
+            <p style="margin-bottom:6px;"><i class="fas fa-code" style="color:var(--accent)"></i> ZenkoTB Engine Guide</p>
+            <p style="font-size:0.75rem; color:var(--text-3);">Educational research only. Operate within ethical boundaries and proper permissions.</p>
+            <a href="https://t.me/+QgJF37rlWgg5MzE9" class="ft-tg" target="_blank"><i class="fab fa-telegram" style="font-size:1.1rem"></i> @ZenkoTB — Join Telegram</a>
+            <div style="margin-top:16px; display:flex; gap:14px; justify-content:center; align-items:center;">
+                <a href="https://t.me/+QgJF37rlWgg5MzE9" target="_blank" style="color:var(--text-3); font-size:1.2rem;"><i class="fab fa-telegram"></i></a>
+                <span style="color:var(--border);">|</span>
+                <span style="color:var(--text-3); font-size:0.75rem;">Updates & Chat Group</span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Scroll reveal
+        const io = new IntersectionObserver((entries)=>{ entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('show'); }); }, {threshold:0.1});
+        document.querySelectorAll('.fade').forEach(el=>io.observe(el));
+
+        // RLS Builder
+        function drawRls() {
+            const rows = document.querySelectorAll('#rlsRows .rls-row');
+            const preview = document.getElementById('rlsPreview');
+            let html = '';
+            rows.forEach(row => {
+                const type = row.querySelector('select').value;
+                const count = parseInt(row.querySelector('input').value) || 0;
+                const cls = type === '0' ? 'dot-d' : 'dot-a';
+                const sym = type === '0' ? '×' : '✓';
+                for(let i=0;i<count;i++) html += `<div class="dot ${cls}">${sym}</div>`;
+            });
+            // remainder
+            for(let i=0;i<8;i++) html += `<div class="dot dot-r">R</div>`;
+            preview.innerHTML = html || '<span style="color:var(--text-3);font-size:0.8rem">Add pattern steps above...</span>';
+        }
+        function addRow() {
+            const div = document.createElement('div'); div.className='rls-row';
+            div.innerHTML = `<select onchange="drawRls()"><option value="0">drop</option><option value="1" selected>accept</option></select><input type="number" value="10" min="1" oninput="drawRls()"><button onclick="delRow(this)">×</button>`;
+            document.getElementById('rlsRows').appendChild(div); drawRls();
+        }
+        function delRow(btn) { btn.parentElement.remove(); drawRls(); }
+        drawRls();
+
+        // Flush slider
+        function updateFlush() {
+            const v = parseInt(document.getElementById('flushSlider').value);
+            document.getElementById('flushVal').textContent = v;
+            let txt = '';
+            if(v===0) txt = 'No initial drop. Very subtle. Best for testing if holding alone works.';
+            else if(v<=5) txt = 'Light initial cut. Minimal desync. Good for cautious tuning.';
+            else if(v<=12) txt = 'Moderate initial desync. Safe for most tickrates. Recommended starting point.';
+            else if(v<=20) txt = 'Aggressive opening. Creates a heavy sync break. Use only if server tolerates it.';
+            else txt = 'DANGER: High risk of timeout or instant reconciliation. Not recommended for beginners.';
+            document.getElementById('flushOut').textContent = `flush_drop_count: ${v} → ${txt}`;
+        }
+        updateFlush();
+
+        // Copy
+        function copy(btn) {
+            const block = btn.closest('.code-block').querySelector('div:last-child');
+            navigator.clipboard.writeText(block.innerText).then(()=>{
+                const o=btn.textContent; btn.textContent='Copied!';
+                btn.style.background='var(--accent-dim)'; btn.style.color='var(--accent)';
+                setTimeout(()=>{btn.textContent=o;btn.style.background='';btn.style.color='';},1800);
+            });
+        }
+    </script>
+</body>
+</html>
