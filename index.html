@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Gautam — Developer</title>
+  <meta name="description" content="Gautam's developer portfolio — software, tools, experiments and projects.">
+  <style>
+    :root{color-scheme:dark;--bg:#07090d;--panel:#0d1118;--text:#edf2f7;--muted:#9aa6b2;--line:#1c2530;--accent:#7dd3fc}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 80% 0%,#10233a 0,transparent 32%),var(--bg);color:var(--text);font:16px/1.7 system-ui,-apple-system,Segoe UI,sans-serif}
+    a{color:inherit;text-decoration:none}.wrap{max-width:1050px;margin:auto;padding:0 24px}.nav{display:flex;justify-content:space-between;align-items:center;padding:22px 0}.brand{font-weight:800;letter-spacing:.4px}.navlinks{display:flex;gap:20px;color:var(--muted)}
+    .hero{min-height:72vh;display:flex;align-items:center}.eyebrow{color:var(--accent);font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:13px}.hero h1{font-size:clamp(46px,8vw,88px);line-height:1;margin:14px 0}.hero p{max-width:680px;color:var(--muted);font-size:19px}.buttons{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}.btn{padding:11px 17px;border:1px solid var(--line);border-radius:12px;background:var(--panel);transition:.2s}.btn:hover{transform:translateY(-2px);border-color:#36536a}.primary{background:#dff6ff;color:#071018;border-color:#dff6ff}
+    section{padding:70px 0;border-top:1px solid var(--line)}h2{font-size:30px;margin:0 0 12px}h3{margin-bottom:6px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.card{background:linear-gradient(180deg,#101722,#0b0f15);border:1px solid var(--line);border-radius:16px;padding:22px;transition:.2s}.card:hover{transform:translateY(-3px);border-color:#334657}.tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:15px}.tag{font-size:12px;color:#b8c5d0;border:1px solid var(--line);padding:3px 8px;border-radius:99px}.game{display:flex;align-items:center;justify-content:space-between;gap:20px}.gamebox{min-width:300px;text-align:center;padding:28px;border:1px solid var(--line);border-radius:16px;background:var(--panel)}#score{font-size:34px;font-weight:800}.target{width:74px;height:74px;border-radius:50%;border:0;background:#dff6ff;cursor:pointer;display:none;margin:18px auto}.target:active{transform:scale(.9)}footer{padding:40px 0;color:var(--muted);text-align:center}
+    @media(max-width:700px){.grid{grid-template-columns:1fr}.navlinks{display:none}.game{display:block}.gamebox{min-width:0}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav"><a class="brand" href="#">GAUTAM</a><div class="navlinks"><a href="#about">About</a><a href="#projects">Projects</a><a href="#game">Game</a><a href="https://github.com/CookieCums">GitHub</a></div></nav>
+  <main>
+    <section class="hero" style="border:0">
+      <div><div class="eyebrow">Developer · Builder · Experimenter</div><h1>Hi, I'm Gautam.</h1><p>I build software, utilities and experiments — from web tools and desktop apps to projects around Android, gaming and developer tooling. This is a simple place to see what I'm working on.</p><div class="buttons"><a class="btn primary" href="https://github.com/CookieCums">View my GitHub</a><a class="btn" href="#projects">Explore projects</a></div></div>
+    </section>
+    <section id="about"><h2>About</h2><p class="muted">I'm a developer who likes turning ideas into working projects. I work across Python, web applications, automation and practical tools, and I enjoy exploring how software behaves from the interface down to the underlying systems.</p></section>
+    <section id="projects"><h2>Selected projects</h2><p class="muted">A few projects that represent the kind of things I build.</p><div class="grid">
+      <a class="card" href="https://github.com/CookieCums/Zenko"><h3>Zenko</h3><p class="muted">A storage-oriented system connected to the Zenko ecosystem for delivering files and resources to rooted Android devices.</p><div class="tags"><span class="tag">Android</span><span class="tag">Storage</span><span class="tag">Systems</span></div></a>
+      <a class="card" href="https://github.com/CookieCums/ControlCodeShare"><h3>ControlCodeShare</h3><p class="muted">A web application for finding and sharing gaming control-code profiles based on device and play configuration.</p><div class="tags"><span class="tag">Python</span><span class="tag">Flask</span><span class="tag">Web</span></div></a>
+      <a class="card" href="https://github.com/CookieCums/Gyro-Sensitivity-Calculator"><h3>Gyro Sensitivity Calculator</h3><p class="muted">A small web tool that calculates adjusted gyro sensitivity from phone weight and optional screen-size differences.</p><div class="tags"><span class="tag">Python</span><span class="tag">Flask</span><span class="tag">Gaming</span></div></a>
+      <a class="card" href="https://github.com/CookieCums/ScreenShort"><h3>ScreenShort</h3><p class="muted">A lightweight desktop screenshot utility with fullscreen capture, region selection and sharing support.</p><div class="tags"><span class="tag">Python</span><span class="tag">PyQt5</span><span class="tag">Desktop</span></div></a>
+      <a class="card" href="https://github.com/CookieCums/ImgurClone"><h3>ImgurClone</h3><p class="muted">A lightweight Flask image-sharing project focused on uploads, storage and browsing.</p><div class="tags"><span class="tag">Python</span><span class="tag">Flask</span><span class="tag">Images</span></div></a>
+    </div></section>
+    <section id="game"><div class="game"><div><h2>Take a break.</h2><p class="muted">Hit the target as many times as you can in 15 seconds. Nothing serious — just a tiny game living on the portfolio.</p></div><div class="gamebox"><div>Score</div><div id="score">0</div><button id="start" class="btn primary">Start game</button><button id="target" class="target" aria-label="Target"></button><div id="time" class="muted">15s</div></div></div></section>
+  </main>
+  <footer><a href="https://github.com/CookieCums">github.com/CookieCums</a> · Built with HTML, CSS and JavaScript.</footer>
+</div>
+<script>
+const start=document.getElementById('start'),target=document.getElementById('target'),scoreEl=document.getElementById('score'),timeEl=document.getElementById('time');let score=0,time=15,timer;
+function move(){target.style.display='block';target.style.marginLeft=Math.random()*70+'%';target.style.marginRight='auto'}
+target.onclick=()=>{score++;scoreEl.textContent=score;move()};start.onclick=()=>{clearInterval(timer);score=0;time=15;scoreEl.textContent=score;timeEl.textContent='15s';start.style.display='none';move();timer=setInterval(()=>{time--;timeEl.textContent=time+'s';if(time<=0){clearInterval(timer);target.style.display='none';start.style.display='inline-block';start.textContent='Play again';timeEl.textContent='Done';}},1000)};
+</script>
+</body></html>
